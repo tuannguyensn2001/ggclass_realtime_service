@@ -2,14 +2,17 @@ package notification
 
 import (
 	"context"
+	"ggclass_log_service/src/models"
 	notificationpb "ggclass_log_service/src/pb/notification"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type IService interface {
 	Create(ctx context.Context, input createNotificationInput) (string, error)
 	NotifyToUser(ctx context.Context, notificationId string, users []int) error
+	GetByUserId(ctx context.Context, userId int) ([]models.Notification, error)
 }
 
 type transport struct {
@@ -44,7 +47,28 @@ func (t *transport) Create(ctx context.Context, request *notificationpb.CreateNo
 }
 
 func (t *transport) GetByUserId(ctx context.Context, request *notificationpb.GetNotificationByUserIdRequest) (*notificationpb.GetNotificationByUserIdResponse, error) {
+	result, err := t.service.GetByUserId(ctx, int(request.UserId))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	data := make([]*notificationpb.Notification, len(result))
+
+	for index, item := range result {
+		data[index] = &notificationpb.Notification{
+			OwnerAvatar: item.OwnerAvatar,
+			OwnerName:   item.OwnerName,
+			Id:          item.ID.Hex(),
+			CreatedBy:   int64(item.CreatedBy),
+			Content:     item.Content,
+			HtmlContent: item.HtmlContent,
+			ClassId:     int64(item.ClassId),
+			CreatedAt:   timestamppb.New(*item.CreatedAt),
+			UpdatedAt:   timestamppb.New(*item.UpdatedAt),
+		}
+	}
+
 	return &notificationpb.GetNotificationByUserIdResponse{
-		Data: nil,
+		Data: data,
 	}, nil
 }

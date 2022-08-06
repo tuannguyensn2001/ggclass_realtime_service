@@ -11,6 +11,8 @@ import (
 type IRepository interface {
 	Create(ctx context.Context, notification *models.Notification) error
 	CreateNotificationToUser(ctx context.Context, list []models.NotificationToUser) error
+	GetNotifyByUserId(ctx context.Context, userId int) ([]models.NotificationToUser, error)
+	FindByNotificationIds(ctx context.Context, ids []string) ([]models.Notification, error)
 }
 
 type service struct {
@@ -63,4 +65,26 @@ func (s *service) NotifyToUser(ctx context.Context, notificationId string, users
 	logger.Sugar().Info(list)
 	return s.repository.CreateNotificationToUser(ctx, list)
 
+}
+
+func (s *service) GetByUserId(ctx context.Context, userId int) ([]models.Notification, error) {
+
+	logger.Sugar().Info(userId)
+
+	notifyList, err := s.repository.GetNotifyByUserId(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	ids := make([]string, 0)
+	for _, item := range notifyList {
+		ids = append(ids, item.NotificationId)
+	}
+
+	result, err := s.repository.FindByNotificationIds(ctx, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
