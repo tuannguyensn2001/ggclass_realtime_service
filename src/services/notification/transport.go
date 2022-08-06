@@ -9,6 +9,7 @@ import (
 
 type IService interface {
 	Create(ctx context.Context, input createNotificationInput) (string, error)
+	NotifyToUser(ctx context.Context, notificationId string, users []int) error
 }
 
 type transport struct {

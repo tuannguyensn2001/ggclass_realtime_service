@@ -1,6 +1,8 @@
 package notification
 
 import (
+	"context"
+	"encoding/json"
 	"ggclass_log_service/src/config"
 	"ggclass_log_service/src/logger"
 )
@@ -46,7 +48,16 @@ func (s *rabbitTransport) Bootstrap() {
 
 	go func() {
 		for d := range msgs {
-			logger.Sugar().Info(string(d.Body))
+			content := d.Body
+
+			var input notifyToUser
+			err := json.Unmarshal(content, &input)
+			if err == nil {
+				err := s.service.NotifyToUser(context.Background(), input.NotificationId, input.Users)
+				if err != nil {
+					logger.Sugar().Error(err)
+				}
+			}
 		}
 	}()
 	<-forever

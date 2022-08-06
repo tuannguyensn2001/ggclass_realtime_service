@@ -8,3 +8,8 @@ type createNotificationInput struct {
 	ClassId     int
 	Content     string
 }
+
+type notifyToUser struct {
+	NotificationId string `json:"id"`
+	Users          []int  `json:"users"`
+}
