@@ -13,4 +13,6 @@ COPY --from=builder /app/config.yml .
 EXPOSE 80
 EXPOSE 20000
 EXPOSE 21000
+EXPOSE 30000
+EXPOSE 31000
 CMD ["/app/main","server"]

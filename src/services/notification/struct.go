@@ -13,3 +13,8 @@ type notifyToUser struct {
 	NotificationId string `json:"id"`
 	Users          []int  `json:"users"`
 }
+
+type setSeenInput struct {
+	UserId         int    `json:"userId"`
+	NotificationId string `json:"notificationId"`
+}

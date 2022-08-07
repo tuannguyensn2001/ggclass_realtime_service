@@ -7,6 +7,6 @@ services:
     env_file:
       - config.yml
     ports:
-      - "20000:20000"
-      - "21000:21000"
+      - "30000:30000"
+      - "31000:31000"
     container_name: resource

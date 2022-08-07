@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type NotificationServiceClient interface {
 	Create(ctx context.Context, in *CreateNotificationRequest, opts ...grpc.CallOption) (*CreateNotificationResponse, error)
 	GetByUserId(ctx context.Context, in *GetNotificationByUserIdRequest, opts ...grpc.CallOption) (*GetNotificationByUserIdResponse, error)
+	GetByClassAndType(ctx context.Context, in *GetNotificationByClassAndTypeRequest, opts ...grpc.CallOption) (*GetNotificationByClassAndTypeResponse, error)
 }
 
 type notificationServiceClient struct {
@@ -52,12 +53,22 @@ func (c *notificationServiceClient) GetByUserId(ctx context.Context, in *GetNoti
 	return out, nil
 }
 
+func (c *notificationServiceClient) GetByClassAndType(ctx context.Context, in *GetNotificationByClassAndTypeRequest, opts ...grpc.CallOption) (*GetNotificationByClassAndTypeResponse, error) {
+	out := new(GetNotificationByClassAndTypeResponse)
+	err := c.cc.Invoke(ctx, "/notification.NotificationService/GetByClassAndType", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NotificationServiceServer is the server API for NotificationService service.
 // All implementations must embed UnimplementedNotificationServiceServer
 // for forward compatibility
 type NotificationServiceServer interface {
 	Create(context.Context, *CreateNotificationRequest) (*CreateNotificationResponse, error)
 	GetByUserId(context.Context, *GetNotificationByUserIdRequest) (*GetNotificationByUserIdResponse, error)
+	GetByClassAndType(context.Context, *GetNotificationByClassAndTypeRequest) (*GetNotificationByClassAndTypeResponse, error)
 	mustEmbedUnimplementedNotificationServiceServer()
 }
 
@@ -70,6 +81,9 @@ func (UnimplementedNotificationServiceServer) Create(context.Context, *CreateNot
 }
 func (UnimplementedNotificationServiceServer) GetByUserId(context.Context, *GetNotificationByUserIdRequest) (*GetNotificationByUserIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetByUserId not implemented")
+}
+func (UnimplementedNotificationServiceServer) GetByClassAndType(context.Context, *GetNotificationByClassAndTypeRequest) (*GetNotificationByClassAndTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetByClassAndType not implemented")
 }
 func (UnimplementedNotificationServiceServer) mustEmbedUnimplementedNotificationServiceServer() {}
 
@@ -120,6 +134,24 @@ func _NotificationService_GetByUserId_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NotificationService_GetByClassAndType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNotificationByClassAndTypeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NotificationServiceServer).GetByClassAndType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/notification.NotificationService/GetByClassAndType",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NotificationServiceServer).GetByClassAndType(ctx, req.(*GetNotificationByClassAndTypeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NotificationService_ServiceDesc is the grpc.ServiceDesc for NotificationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +166,10 @@ var NotificationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetByUserId",
 			Handler:    _NotificationService_GetByUserId_Handler,
+		},
+		{
+			MethodName: "GetByClassAndType",
+			Handler:    _NotificationService_GetByClassAndType_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

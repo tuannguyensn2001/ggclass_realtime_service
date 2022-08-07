@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"ggclass_log_service/src/logger"
+	"github.com/pusher/pusher-http-go/v5"
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -28,6 +29,7 @@ type config struct {
 	GrpcPort string
 	Mongo    *mongo.Client
 	RabbitMQ *amqp091.Connection
+	Pusher   pusher.Client
 }
 
 var cfg config
@@ -66,10 +68,19 @@ func Load() error {
 		logger.Sugar().Error(err)
 	}
 
+	pusherClient := pusher.Client{
+		AppID:   "1440558",
+		Key:     "26bdb6fd186156c41fe6",
+		Secret:  "708f13f675065ba00a92",
+		Cluster: "ap1",
+		Secure:  true,
+	}
+
 	cfg.HttpPort = config.App.HttpPort
 	cfg.GrpcPort = config.App.GrpcPort
 	cfg.Mongo = client
 	cfg.RabbitMQ = rabbit
+	cfg.Pusher = pusherClient
 
 	return nil
 

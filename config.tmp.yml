@@ -1,6 +1,6 @@
 app:
-  httpPort: 21000
-  grpcPort: 20000
+  httpPort: 31000
+  grpcPort: 30000
 mongo:
   url: mongodb+srv://root:java2001@cluster0.pskp1.mongodb.net/?retryWrites=true&w=majority
 

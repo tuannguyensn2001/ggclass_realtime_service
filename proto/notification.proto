@@ -31,6 +31,8 @@ message Notification {
   string content = 7;
   google.protobuf.Timestamp createdAt = 8;
   google.protobuf.Timestamp updatedAt = 9;
+  int64 seen = 10;
+  int64 type = 11;
 }
 
 message GetNotificationByUserIdRequest {
@@ -40,7 +42,14 @@ message GetNotificationByUserIdRequest {
 message GetNotificationByUserIdResponse {
   repeated Notification data = 1;
 }
+message GetNotificationByClassAndTypeRequest {
+  int64 classId = 1;
+  int64 type = 2;
+}
 
+message GetNotificationByClassAndTypeResponse {
+  repeated Notification data = 1;
+}
 
 service NotificationService {
   rpc Create(CreateNotificationRequest) returns (CreateNotificationResponse) {
@@ -54,4 +63,5 @@ service NotificationService {
       get: "/api/v1/notifications"
     };
   }
+  rpc GetByClassAndType(GetNotificationByClassAndTypeRequest) returns(GetNotificationByClassAndTypeResponse){}
 }

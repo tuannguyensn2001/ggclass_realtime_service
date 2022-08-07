@@ -33,8 +33,16 @@ func (s *rabbitTransport) Bootstrap() {
 	if err != nil {
 		logger.Sugar().Error(err)
 	}
+	q1, err := ch.QueueDeclare("", false, false, true, false, nil)
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
 
 	err = ch.QueueBind(q.Name, "teacher_create", "notification", false, nil)
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
+	err = ch.QueueBind(q1.Name, "seen", "notification", false, nil)
 	if err != nil {
 		logger.Sugar().Error(err)
 	}
@@ -43,6 +51,8 @@ func (s *rabbitTransport) Bootstrap() {
 	if err != nil {
 		logger.Sugar().Error(err)
 	}
+
+	msgs1, err := ch.Consume(q1.Name, "", true, false, false, false, nil)
 
 	forever := make(chan struct{})
 
@@ -60,5 +70,23 @@ func (s *rabbitTransport) Bootstrap() {
 			}
 		}
 	}()
+
+	go func() {
+		for d := range msgs1 {
+			content := d.Body
+			var input setSeenInput
+			err := json.Unmarshal(content, &input)
+			if err != nil {
+				continue
+			}
+
+			err = s.service.SetSeen(context.Background(), input.UserId, input.NotificationId)
+			if err != nil {
+				logger.Sugar().Error(err)
+			}
+
+		}
+	}()
+
 	<-forever
 }

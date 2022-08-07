@@ -2,6 +2,8 @@ package notification
 
 import (
 	"context"
+	"ggclass_log_service/src/config"
+	"ggclass_log_service/src/enums"
 	"ggclass_log_service/src/logger"
 	"ggclass_log_service/src/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,6 +15,8 @@ type IRepository interface {
 	CreateNotificationToUser(ctx context.Context, list []models.NotificationToUser) error
 	GetNotifyByUserId(ctx context.Context, userId int) ([]models.NotificationToUser, error)
 	FindByNotificationIds(ctx context.Context, ids []string) ([]models.Notification, error)
+	FindByClassIdAndType(ctx context.Context, classId int, typeNotification enums.NotificationType) ([]models.Notification, error)
+	SetSeenForUser(ctx context.Context, userId int, notificationId string) error
 }
 
 type service struct {
@@ -23,7 +27,7 @@ func NewService(repository IRepository) *service {
 	return &service{repository: repository}
 }
 
-func (s *service) Create(ctx context.Context, input createNotificationInput) (string, error) {
+func (s *service) Create(ctx context.Context, input createNotificationInput, typeNotification enums.NotificationType) (string, error) {
 	now := time.Now()
 	notification := models.Notification{
 		OwnerAvatar: input.OwnerAvatar,
@@ -35,6 +39,7 @@ func (s *service) Create(ctx context.Context, input createNotificationInput) (st
 		CreatedAt:   &now,
 		UpdatedAt:   &now,
 		ID:          primitive.NewObjectID(),
+		Type:        typeNotification,
 	}
 
 	err := s.repository.Create(ctx, &notification)
@@ -62,6 +67,13 @@ func (s *service) NotifyToUser(ctx context.Context, notificationId string, users
 		}
 	}
 
+	pusher := config.GetConfig().Pusher
+
+	err := pusher.Trigger("notifications", "refetch", users)
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
+
 	logger.Sugar().Info(list)
 	return s.repository.CreateNotificationToUser(ctx, list)
 
@@ -77,8 +89,10 @@ func (s *service) GetByUserId(ctx context.Context, userId int) ([]models.Notific
 	}
 
 	ids := make([]string, 0)
+	mapSeen := make(map[string]int)
 	for _, item := range notifyList {
 		ids = append(ids, item.NotificationId)
+		mapSeen[item.NotificationId] = item.Seen
 	}
 
 	result, err := s.repository.FindByNotificationIds(ctx, ids)
@@ -86,5 +100,21 @@ func (s *service) GetByUserId(ctx context.Context, userId int) ([]models.Notific
 		return nil, err
 	}
 
+	for index, _ := range result {
+		val, ok := mapSeen[result[index].ID.Hex()]
+		if !ok {
+			continue
+		}
+		result[index].Seen = val
+	}
+
 	return result, nil
+}
+
+func (s *service) GetByClassIdAndType(ctx context.Context, classId int, typeNotification enums.NotificationType) ([]models.Notification, error) {
+	return s.repository.FindByClassIdAndType(ctx, classId, typeNotification)
+}
+
+func (s *service) SetSeen(ctx context.Context, userId int, notificationId string) error {
+	return s.repository.SetSeenForUser(ctx, userId, notificationId)
 }
