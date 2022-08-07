@@ -2,6 +2,7 @@ package notification
 
 import (
 	"context"
+	"ggclass_log_service/src/config"
 	"ggclass_log_service/src/enums"
 	"ggclass_log_service/src/logger"
 	"ggclass_log_service/src/models"
@@ -20,7 +21,7 @@ func NewRepository(db *mongo.Client) *repository {
 }
 
 func (r *repository) Create(ctx context.Context, notification *models.Notification) error {
-	_, err := r.db.Database("ggclass_realtime").Collection(models.Notification{}.CollectionName()).InsertOne(ctx, notification)
+	_, err := r.db.Database(config.GetConfig().MongoDatabase).Collection(models.Notification{}.CollectionName()).InsertOne(ctx, notification)
 	if err != nil {
 		return err
 	}
@@ -35,7 +36,7 @@ func (r *repository) CreateNotificationToUser(ctx context.Context, list []models
 		documents = append(documents, item)
 	}
 
-	_, err := r.db.Database("ggclass_realtime").Collection(models.NotificationToUser{}.CollectionName()).InsertMany(ctx, documents)
+	_, err := r.db.Database(config.GetConfig().MongoDatabase).Collection(models.NotificationToUser{}.CollectionName()).InsertMany(ctx, documents)
 	if err != nil {
 		logger.Sugar().Error(err)
 		return err
@@ -49,7 +50,7 @@ func (r *repository) GetNotifyByUserId(ctx context.Context, userId int) ([]model
 
 	filter := bson.D{{"userId", userId}}
 
-	cursor, err := r.db.Database("ggclass_realtime").Collection(models.NotificationToUser{}.CollectionName()).Find(ctx, filter)
+	cursor, err := r.db.Database(config.GetConfig().MongoDatabase).Collection(models.NotificationToUser{}.CollectionName()).Find(ctx, filter)
 	if err != nil {
 		logger.Sugar().Error(err)
 		return nil, err
@@ -87,7 +88,7 @@ func (r *repository) FindByNotificationIds(ctx context.Context, ids []string) ([
 
 	opts := options.Find().SetSort(bson.D{{"_id", -1}})
 
-	cursor, err := r.db.Database("ggclass_realtime").Collection(models.Notification{}.CollectionName()).Find(ctx, filter, opts)
+	cursor, err := r.db.Database(config.GetConfig().MongoDatabase).Collection(models.Notification{}.CollectionName()).Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +113,7 @@ func (r *repository) FindByClassIdAndType(ctx context.Context, classId int, type
 
 	filter := bson.D{{"classId", classId}, {"type", typeNotification}}
 
-	cursor, err := r.db.Database("ggclass_realtime").Collection(models.Notification{}.CollectionName()).Find(ctx, filter)
+	cursor, err := r.db.Database(config.GetConfig().MongoDatabase).Collection(models.Notification{}.CollectionName()).Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +138,7 @@ func (r *repository) SetSeenForUser(ctx context.Context, userId int, notificatio
 	filter := bson.D{{"notificationId", notificationId}, {"userId", userId}}
 	update := bson.D{{"$set", bson.D{{"seen", 1}}}}
 
-	_, err := r.db.Database("ggclass_realtime").Collection(models.NotificationToUser{}.CollectionName()).UpdateOne(ctx, filter, update)
+	_, err := r.db.Database(config.GetConfig().MongoDatabase).Collection(models.NotificationToUser{}.CollectionName()).UpdateOne(ctx, filter, update)
 
 	return err
 }

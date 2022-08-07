@@ -3,6 +3,7 @@ app:
   grpcPort: 30000
 mongo:
   url: mongodb+srv://root:java2001@cluster0.pskp1.mongodb.net/?retryWrites=true&w=majority
+  database: ggclass_realtime
 
 rabbitmq:
   url: amqps://xjhmwkzn:cNVpuB5RuzHoc9L0D_CHnDFCl4U0iFIB@armadillo.rmq.cloudamqp.com/xjhmwkzn

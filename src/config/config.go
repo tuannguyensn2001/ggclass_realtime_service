@@ -17,7 +17,8 @@ type structure struct {
 		GrpcPort string `mapstructure:"grpcPort"`
 	} `mapstructure:"app"`
 	Mongo struct {
-		Url string `mapstructure:"url"`
+		Url      string `mapstructure:"url"`
+		Database string `mapstructure:"database"`
 	} `mapstructure:"mongo"`
 	RabbitMQ struct {
 		Url string `mapstructure: "url"`
@@ -25,11 +26,12 @@ type structure struct {
 }
 
 type config struct {
-	HttpPort string
-	GrpcPort string
-	Mongo    *mongo.Client
-	RabbitMQ *amqp091.Connection
-	Pusher   pusher.Client
+	HttpPort      string
+	GrpcPort      string
+	Mongo         *mongo.Client
+	RabbitMQ      *amqp091.Connection
+	Pusher        pusher.Client
+	MongoDatabase string
 }
 
 var cfg config
@@ -81,6 +83,7 @@ func Load() error {
 	cfg.Mongo = client
 	cfg.RabbitMQ = rabbit
 	cfg.Pusher = pusherClient
+	cfg.MongoDatabase = config.Mongo.Database
 
 	return nil
 
