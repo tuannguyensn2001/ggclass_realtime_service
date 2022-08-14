@@ -38,11 +38,18 @@ func (s *rabbitTransport) Bootstrap() {
 		logger.Sugar().Error(err)
 	}
 
+	qUserDoneTest, err := ch.QueueDeclare("", false, false, true, false, nil)
+
 	err = ch.QueueBind(q.Name, "teacher_create", "notification", false, nil)
 	if err != nil {
 		logger.Sugar().Error(err)
 	}
 	err = ch.QueueBind(q1.Name, "seen", "notification", false, nil)
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
+
+	err = ch.QueueBind(qUserDoneTest.Name, "user_done_test", "notification", false, nil)
 	if err != nil {
 		logger.Sugar().Error(err)
 	}
@@ -53,6 +60,11 @@ func (s *rabbitTransport) Bootstrap() {
 	}
 
 	msgs1, err := ch.Consume(q1.Name, "", true, false, false, false, nil)
+
+	msgsUserDoneTest, err := ch.Consume(qUserDoneTest.Name, "", true, false, false, false, nil)
+	if err != nil {
+		logger.Sugar().Error(err)
+	}
 
 	forever := make(chan struct{})
 
@@ -85,6 +97,21 @@ func (s *rabbitTransport) Bootstrap() {
 				logger.Sugar().Error(err)
 			}
 
+		}
+	}()
+
+	go func() {
+		for d := range msgsUserDoneTest {
+			content := d.Body
+
+			var input notifyToUser
+			err := json.Unmarshal(content, &input)
+			if err == nil {
+				err := s.service.NotifyToUser(context.Background(), input.NotificationId, input.Users)
+				if err != nil {
+					logger.Sugar().Error(err)
+				}
+			}
 		}
 	}()
 

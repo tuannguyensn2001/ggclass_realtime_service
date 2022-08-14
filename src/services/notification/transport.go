@@ -37,7 +37,7 @@ func (t *transport) Create(ctx context.Context, request *notificationpb.CreateNo
 		Content:     request.Content,
 	}
 
-	id, err := t.service.Create(ctx, input, enums.NotificationFromTeacherToClass)
+	id, err := t.service.Create(ctx, input, enums.NotificationType(request.Type))
 	if err != nil {
 		return nil, status.Error(codes.Internal, "has error")
 	}
